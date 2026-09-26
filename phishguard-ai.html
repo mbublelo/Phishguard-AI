@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>PhishGuard AI — Phishing Threat Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+<style>
+  :root{
+    --bg:#071B34;
+    --bg-2:#0D2748;
+    --card:#102E57;
+    --card-border:rgba(184,199,217,0.14);
+    --accent:#00FF88;
+    --accent-dim:#0BBE6C;
+    --text:#FFFFFF;
+    --text-2:#B8C7D9;
+    --danger:#FF4D6D;
+    --warn:#FFA83B;
+    --safe:#00FF88;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:8px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:84px;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(0,255,136,0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, rgba(13,39,72,0.9), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    margin:0;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    overflow-x:hidden;
+  }
+  h1,h2,h3,h4,.brand{font-family:var(--font-display);}
+  a{text-decoration:none;}
+  ::selection{background:var(--accent);color:#04140F;}
+
+  /* ---------- Nav ---------- */
+  .navbar-pg{
+    position:sticky;top:0;z-index:1000;
+    padding-top:calc(14px + env(safe-area-inset-top,0px));
+    padding-bottom:14px;
+    background:rgba(7,27,52,0.72);
+    backdrop-filter:blur(14px) saturate(140%);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    border-bottom:1px solid var(--card-border);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.28rem;color:var(--text);}
+  .brand svg{width:28px;height:28px;flex-shrink:0;}
+  .nav-links{display:flex;gap:2rem;margin:0 auto;}
+  .nav-links a{
+    color:var(--text-2);font-size:0.95rem;font-weight:500;position:relative;padding:4px 0;
+    transition:color .2s ease;
+  }
+  .nav-links a:hover{color:var(--text);}
+  .nav-links a::after{
+    content:"";position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--accent);
+    transition:width .25s ease;
+  }
+  .nav-links a:hover::after{width:100%;}
+  .btn-ghost{
+    color:var(--text);border:1px solid var(--card-border);border-radius:999px;padding:9px 20px;
+    font-weight:500;font-size:0.92rem;transition:border-color .2s ease, background .2s ease;
+  }
+  .btn-ghost:hover{border-color:var(--accent);color:var(--text);background:rgba(0,255,136,0.06);}
+  .btn-accent{
+    background:var(--accent);color:#04140F;border:none;border-radius:999px;padding:10px 22px;
+    font-weight:700;font-size:0.92rem;transition:transform .2s ease, box-shadow .2s ease;
+    box-shadow:0 0 0 rgba(0,255,136,0);
+  }
+  .btn-accent:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,255,136,0.28);color:#04140F;}
+  .btn-outline-accent{
+    background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:999px;
+    padding:10px 22px;font-weight:600;font-size:0.92rem;transition:background .2s ease,color .2s ease;
+  }
+  .btn-outline-accent:hover{background:var(--accent);color:#04140F;}
+  #navToggle{filter:invert(1) grayscale(1) brightness(1.4);}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:88px 0 60px;position:relative;}
+  .hero-kicker{
+    display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-family:var(--font-mono);
+    font-size:0.82rem;letter-spacing:0.02em;margin-bottom:22px;
+  }
+  .hero-kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulseDot 2s infinite;}
+  @keyframes pulseDot{0%,100%{opacity:1;}50%{opacity:0.35;}}
+  .hero h1{
+    font-size:clamp(2.4rem, 4.6vw, 3.6rem);line-height:1.08;font-weight:700;margin-bottom:24px;max-width:640px;
+  }
+  .hero p.lead{color:var(--text-2);font-size:1.12rem;line-height:1.65;max-width:520px;margin-bottom:34px;}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:40px;}
+  .hero-stats{display:flex;gap:40px;flex-wrap:wrap;}
+  .hero-stats .stat-num{font-family:var(--font-display);font-size:1.7rem;font-weight:700;color:var(--text);}
+  .hero-stats .stat-label{color:var(--text-2);font-size:0.85rem;}
+
+  .radar-wrap{position:relative;display:flex;align-items:center;justify-content:center;height:100%;min-height:420px;}
+  .radar-ring{position:absolute;border-radius:50%;border:1px solid rgba(0,255,136,0.18);}
+  .r1{width:180px;height:180px;}
+  .r2{width:300px;height:300px;}
+  .r3{width:420px;height:420px;}
+  .radar-sweep{
+    position:absolute;width:420px;height:420px;border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(0,255,136,0.35), transparent 28%);
+    animation:spin 5s linear infinite;
+    mask-image:radial-gradient(circle, black 60%, transparent 61%);
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .radar-core{
+    position:relative;z-index:2;width:132px;height:132px;border-radius:28px;
+    background:linear-gradient(155deg, var(--card), var(--bg-2));
+    border:1px solid var(--card-border);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 60px rgba(0,255,136,0.12), inset 0 0 30px rgba(0,255,136,0.06);
+  }
+  .radar-core svg{width:60px;height:60px;}
+  .blip{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 10px var(--danger);}
+  .blip.b2{background:var(--warn);box-shadow:0 0 10px var(--warn);}
+  .blip.b3{background:var(--accent);box-shadow:0 0 10px var(--accent);}
+
+  /* ---------- Section shell ---------- */
+  section{padding:90px 0;}
+  .section-tag{color:var(--accent);font-family:var(--font-mono);font-size:0.82rem;margin-bottom:10px;}
+  .section-title{font-size:clamp(1.7rem,2.8vw,2.3rem);font-weight:700;margin-bottom:14px;}
+  .section-sub{color:var(--text-2);max-width:640px;line-height:1.6;margin-bottom:0;}
+
+  .glass-card{
+    background:linear-gradient(160deg, rgba(16,46,87,0.75), rgba(13,39,72,0.55));
+    border:1px solid var(--card-border);
+    border-radius:var(--radius-lg);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+  }
+
+  /* ---------- Scanner ---------- */
+  #scanner{background:linear-gradient(180deg, transparent, rgba(13,39,72,0.35) 12%, rgba(13,39,72,0.35) 88%, transparent);}
+  .tab-rail{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px;}
+  .tab-pill{
+    background:transparent;border:1px solid var(--card-border);color:var(--text-2);
+    border-radius:999px;padding:9px 18px;font-size:0.88rem;font-weight:500;
+    transition:all .2s ease;
+  }
+  .tab-pill.active{background:var(--accent);border-color:var(--accent);color:#04140F;font-weight:700;}
+  .tab-pill:not(.active):hover{border-color:var(--text-2);color:var(--text);}
+
+  .scan-panel{display:none;padding:30px;}
+  .scan-panel.active{display:block;}
+
+  .dropzone{
+    border:1.5px dashed var(--card-border);border-radius:var(--radius-md);
+    padding:34px 20px;text-align:center;color:var(--text-2);
+    transition:border-color .2s ease, background .2s ease;cursor:pointer;
+  }
+  .dropzone.drag-over{border-color:var(--accent);background:rgba(0,255,136,0.05);color:var(--text);}
+  .dropzone svg{width:34px;height:34px;margin-bottom:10px;color:var(--accent);}
+  .dropzone .file-types{font-family:var(--font-mono);font-size:0.76rem;color:var(--text-2);margin-top:6px;}
+
+  textarea.pg-input, input.pg-input{
+    background:var(--bg-2);border:1px solid var(--card-border);color:var(--text);
+    border-radius:var(--radius-sm);padding:14px 16px;width:100%;font-family:var(--font-mono);font-size:0.88rem;
+  }
+  textarea.pg-input:focus, input.pg-input:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,255,136,0.12);
+  }
+  textarea.pg-input::placeholder, input.pg-input::placeholder{color:#6f83a0;}
+
+  .scan-btn{
+    background:var(--accent);color:#04140F;border:none;border-radius:999px;
+    padding:14px 30px;font-weight:700;font-size:1rem;width:100%;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:transform .15s ease, box-shadow .2s ease;
+  }
+  .scan-btn:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,255,136,0.25);}
+  .scan-btn:disabled{opacity:0.7;transform:none;box-shadow:none;cursor:progress;}
+  .spinner-ring{
+    width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(4,20,15,0.35);
+    border-top-color:#04140F;animation:spin 0.7s linear infinite;display:none;
+  }
+  .scan-btn.loading .spinner-ring{display:inline-block;}
+  .scan-btn.loading .scan-btn-label::after{content:"Analysing…";}
+  .scan-btn .scan-btn-label::after{content:"Analyse Threat";}
+  .scan-btn.loading .scan-btn-icon{display:none;}
+
+  /* ---------- Results ---------- */
+  #results{display:none;}
+  #results.show{display:block;}
+  .score-ring-wrap{position:relative;width:220px;height:220px;margin:0 auto;}
+  .score-ring-wrap canvas{width:100% !important;height:100% !important;}
+  .score-center{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .score-center .num{font-family:var(--font-display);font-size:2.4rem;font-weight:700;line-height:1;}
+  .score-center .lbl{color:var(--text-2);font-size:0.78rem;margin-top:6px;font-family:var(--font-mono);}
+  .verdict-chip{
+    display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;
+    font-weight:700;font-size:0.9rem;margin-top:18px;
+  }
+  .verdict-chip .dot{width:8px;height:8px;border-radius:50%;}
+
+  .check-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--card-border);}
+  .check-row:last-child{border-bottom:none;}
+  .check-row .icon{width:22px;height:22px;flex-shrink:0;}
+  .check-row .name{color:var(--text);font-size:0.92rem;flex:1;}
+  .check-row .status{font-family:var(--font-mono);font-size:0.76rem;color:var(--text-2);}
+
+  .breakdown-row{margin-bottom:18px;}
+  .breakdown-row:last-child{margin-bottom:0;}
+  .breakdown-label{display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:7px;}
+  .breakdown-label span:first-child{color:var(--text-2);}
+  .breakdown-label span:last-child{font-family:var(--font-mono);font-weight:600;}
+  .bd-track{height:8px;border-radius:99px;background:var(--bg-2);overflow:hidden;}
+  .bd-fill{height:100%;border-radius:99px;width:0%;transition:width 1s cubic-bezier(.2,.8,.2,1);}
+
+  /* ---------- Feature cards ---------- */
+  .feat-card{padding:28px;height:100%;transition:transform .2s ease, border-color .2s ease;}
+  .feat-card:hover{transform:translateY(-4px);border-color:rgba(0,255,136,0.35);}
+  .feat-icon{
+    width:46px;height:46px;border-radius:12px;background:rgba(0,255,136,0.1);
+    display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:var(--accent);
+  }
+  .feat-icon svg{width:22px;height:22px;}
+  .feat-card h4{font-size:1.05rem;margin-bottom:8px;}
+  .feat-card p{color:var(--text-2);font-size:0.9rem;line-height:1.6;margin:0;}
+
+  /* ---------- Dashboard ---------- */
+  .kpi-card{padding:24px;}
+  .kpi-card .kpi-label{color:var(--text-2);font-size:0.82rem;font-family:var(--font-mono);}
+  .kpi-card .kpi-value{font-family:var(--font-display);font-size:1.9rem;font-weight:700;margin:6px 0;}
+  .kpi-card .kpi-delta{font-size:0.8rem;}
+  .kpi-delta.up{color:var(--danger);}
+  .kpi-delta.down{color:var(--accent);}
+  .table-pg{width:100%;font-size:0.88rem;}
+  .table-pg th{color:var(--text-2);font-weight:500;font-family:var(--font-mono);font-size:0.76rem;padding-bottom:12px;border-bottom:1px solid var(--card-border);}
+  .table-pg td{padding:12px 0;border-bottom:1px solid var(--card-border);vertical-align:middle;}
+  .badge-risk{padding:4px 12px;border-radius:999px;font-size:0.76rem;font-weight:700;}
+
+  /* ---------- Pricing ---------- */
+  .price-card{padding:34px 28px;height:100%;position:relative;}
+  .price-card.featured{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent), 0 20px 50px rgba(0,255,136,0.08);}
+  .price-tag-pop{
+    position:absolute;top:-13px;left:28px;background:var(--accent);color:#04140F;
+    font-size:0.72rem;font-weight:700;padding:4px 12px;border-radius:999px;
+  }
+  .price-card .tier{color:var(--text-2);font-family:var(--font-mono);font-size:0.82rem;}
+  .price-card .amount{font-family:var(--font-display);font-size:2.3rem;font-weight:700;margin:8px 0 20px;}
+  .price-card .amount span{font-size:0.95rem;color:var(--text-2);font-weight:500;}
+  .price-card ul{list-style:none;padding:0;margin:0 0 26px;}
+  .price-card li{display:flex;gap:10px;color:var(--text-2);font-size:0.9rem;padding:7px 0;}
+  .price-card li svg{width:16px;height:16px;color:var(--accent);flex-shrink:0;margin-top:2px;}
+
+  footer{border-top:1px solid var(--card-border);padding:50px 0 30px;color:var(--text-2);font-size:0.86rem;}
+  footer a{color:var(--text-2);}
+  footer a:hover{color:var(--accent);}
+
+  input::placeholder, textarea::placeholder{opacity:0.7;}
+  ::-webkit-scrollbar{width:10px;}
+  ::-webkit-scrollbar-track{background:var(--bg-2);}
+  ::-webkit-scrollbar-thumb{background:#1d4577;border-radius:99px;}
+
+  @media (max-width: 991px){
+    .radar-wrap{min-height:280px;margin-top:40px;}
+    .r3{width:280px;height:280px;}
+    .radar-sweep{width:280px;height:280px;}
+    .r2{width:200px;height:200px;}
+    .r1{width:120px;height:120px;}
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- ===================== NAV ===================== -->
+<nav class="navbar-pg navbar navbar-expand-lg">
+  <div class="container">
+    <a class="brand" href="#home">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L3 6V11C3 16.5 6.8 21.2 12 22.5C17.2 21.2 21 16.5 21 11V6L12 2Z" stroke="#00FF88" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M9 12L11 14L15.5 9.5" stroke="#00FF88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      PhishGuard AI
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" id="navToggle">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <div class="nav-links mt-3 mt-lg-0 flex-column flex-lg-row">
+        <a href="#home">Home</a>
+        <a href="#scanner">Scanner</a>
+        <a href="#gmail">Gmail Integration</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="d-flex gap-2 mt-3 mt-lg-0">
+        <a href="#scanner" class="btn-accent">Start Scanning — Free</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header id="home" class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="hero-kicker"><span class="dot"></span>FREE · NO ACCOUNT NEEDED</div>
+        <h1>Analyse emails for phishing threats in seconds</h1>
+        <p class="lead">Upload emails, scan suspicious links, inspect headers, and protect yourself from phishing attacks with AI-powered threat detection — free to use, no sign-up or password required.</p>
+        <div class="hero-actions">
+          <a href="#scanner" class="btn-accent">Scan Email</a>
+          <a href="#gmail" class="btn-outline-accent">Connect Gmail</a>
+        </div>
+        <div class="hero-stats">
+          <div><div class="stat-num">Free</div><div class="stat-label">Always, no subscription</div></div>
+          <div><div class="stat-num">0</div><div class="stat-label">Accounts or passwords</div></div>
+          <div><div class="stat-num">&lt;3s</div><div class="stat-label">Average scan time</div></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="radar-wrap">
+          <div class="radar-ring r3"></div>
+          <div class="radar-ring r2"></div>
+          <div class="radar-ring r1"></div>
+          <div class="radar-sweep"></div>
+          <div class="blip" style="top:22%;left:64%;"></div>
+          <div class="blip b2" style="top:68%;left:28%;"></div>
+          <div class="blip b3" style="top:38%;left:20%;"></div>
+          <div class="blip b2" style="top:76%;left:70%;"></div>
+          <div class="radar-core">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L3 6V11C3 16.5 6.8 21.2 12 22.5C17.2 21.2 21 16.5 21 11V6L12 2Z" stroke="#00FF88" stroke-width="1.4"/>
+              <path d="M9 12L11 14L15.5 9.5" stroke="#00FF88" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== SCANNER ===================== -->
+<section id="scanner">
+  <div class="container">
+    <div class="section-tag">// SCANNER</div>
+    <h2 class="section-title">One console, five ways in</h2>
+    <p class="section-sub mb-5">Paste raw content or upload a file — PhishGuard AI inspects it the way an analyst would: headers first, then links, then intent.</p>
+
+    <div class="glass-card p-3 p-md-4">
+      <div class="tab-rail">
+        <button class="tab-pill active" data-tab="email">Email Scan</button>
+        <button class="tab-pill" data-tab="url">URL Scan</button>
+        <button class="tab-pill" data-tab="domain">Domain Lookup</button>
+        <button class="tab-pill" data-tab="attachment">Attachment Scan</button>
+        <button class="tab-pill" data-tab="header">Header Analysis</button>
+      </div>
+
+      <!-- Email Scan -->
+      <div class="scan-panel active" id="panel-email">
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <label class="form-label text-2 mb-2" style="color:var(--text-2);font-size:0.85rem;">Paste email content</label>
+            <textarea id="emailText" class="pg-input" rows="8" placeholder="Paste Email Content Here — headers, body, links and all."></textarea>
+          </div>
+          <div class="col-lg-5">
+            <label class="form-label mb-2" style="color:var(--text-2);font-size:0.85rem;">Or upload a file</label>
+            <div class="dropzone" id="dropzone">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 16V4M12 4L7 9M12 4L17 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16V18C4 19.1 4.9 20 6 20H18C19.1 20 20 19.1 20 18V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <div>Drag &amp; drop a file, or click to browse</div>
+              <div class="file-types">.eml · .msg · .txt · .pdf</div>
+              <div id="fileName" style="color:var(--accent);margin-top:8px;font-size:0.82rem;"></div>
+            </div>
+            <input type="file" id="fileInput" accept=".eml,.msg,.txt,.pdf" hidden>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL Scan -->
+      <div class="scan-panel" id="panel-url">
+        <label class="form-label mb-2" style="color:var(--text-2);font-size:0.85rem;">Enter a URL to check</label>
+        <input type="text" class="pg-input" id="urlInput" placeholder="https://example.com/reset-password">
+      </div>
+
+      <!-- Domain Lookup -->
+      <div class="scan-panel" id="panel-domain">
+        <label class="form-label mb-2" style="color:var(--text-2);font-size:0.85rem;">Enter a domain</label>
+        <input type="text" class="pg-input" id="domainInput" placeholder="secure-login-update.net">
+      </div>
+
+      <!-- Attachment Scan -->
+      <div class="scan-panel" id="panel-attachment">
+        <div class="dropzone" id="dropzoneAttach" style="max-width:460px;">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 16V4M12 4L7 9M12 4L17 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16V18C4 19.1 4.9 20 6 20H18C19.1 20 20 19.1 20 18V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <div>Drop an attachment to inspect</div>
+          <div class="file-types">.pdf · .docx · .xlsx · .zip</div>
+          <div id="fileNameAttach" style="color:var(--accent);margin-top:8px;font-size:0.82rem;"></div>
+        </div>
+        <input type="file" id="fileInputAttach" hidden>
+      </div>
+
+      <!-- Header Analysis -->
+      <div class="scan-panel" id="panel-header">
+        <label class="form-label mb-2" style="color:var(--text-2);font-size:0.85rem;">Paste raw email headers</label>
+        <textarea class="pg-input" id="headerText" rows="6" placeholder="Received: from mail.example.com...&#10;SPF: ...&#10;DKIM: ..."></textarea>
+      </div>
+
+      <button class="scan-btn mt-4" id="scanBtn">
+        <svg class="scan-btn-icon" viewBox="0 0 24 24" fill="none" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="#04140F" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="#04140F" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="spinner-ring"></span>
+        <span class="scan-btn-label"></span>
+      </button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" class="mt-4">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="glass-card p-4 h-100 text-center d-flex flex-column align-items-center justify-content-center">
+            <div class="score-ring-wrap">
+              <canvas id="scoreChart"></canvas>
+              <div class="score-center">
+                <div class="num" id="scoreNum">0%</div>
+                <div class="lbl">RISK SCORE</div>
+              </div>
+            </div>
+            <div class="verdict-chip" id="verdictChip"></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="glass-card p-4 h-100">
+            <h4 class="mb-3" style="font-size:1rem;">Analysis summary</h4>
+            <div id="checklist"></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="glass-card p-4 h-100">
+            <h4 class="mb-3" style="font-size:1rem;">Threat breakdown</h4>
+            <div id="breakdown"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== GMAIL / FEATURES ===================== -->
+<section id="gmail">
+  <div class="container">
+    <div class="row align-items-end mb-5">
+      <div class="col-lg-7">
+        <div class="section-tag">// DETECTION FEATURES</div>
+        <h2 class="section-title">Six checks, one verdict</h2>
+        <p class="section-sub">Every submission runs through the same pipeline a Tier 1 SOC analyst would follow — automated, and fast enough to run on every inbound message.</p>
+      </div>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4" data-aos="fade-up">
+        <div class="glass-card feat-card">
+          <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v5c0 5.5 3.8 10.2 9 11.5 5.2-1.3 9-6 9-11.5V6l-9-4Z" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <h4>Sender &amp; SPF/DKIM checks</h4>
+          <p>Validates authentication records and flags spoofed or misaligned sending domains.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="80">
+        <div class="glass-card feat-card">
+          <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.5 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <h4>URL reputation</h4>
+          <p>Cross-references every link against known malicious and newly-registered domain lists.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="160">
+        <div class="glass-card feat-card">
+          <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <h4>OSINT domain intelligence</h4>
+          <p>Pulls WHOIS age, hosting history and prior abuse reports for every linked domain.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up">
+        <div class="glass-card feat-card">
+          <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.6"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <h4>Attachment inspection</h4>
+          <p>Sandboxes files to surface macros, embedded scripts and disguised executables.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="80">
+        <div class="feat-icon" style="display:none;"></div>
+        <div class="glass-card feat-card">
+          <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <h4>Header integrity</h4>
+          <p>Traces the routing path hop by hop to catch relay spoofing and header tampering.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="160">
+        <div class="glass-card feat-card">
+          <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <h4>Gmail integration</h4>
+          <p>Connect an inbox to scan messages automatically as they arrive, no forwarding required.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DASHBOARD ===================== -->
+<section id="dashboard" style="background:rgba(13,39,72,0.3);">
+  <div class="container">
+    <div class="section-tag">// DASHBOARD</div>
+    <h2 class="section-title mb-5">Your scan history at a glance</h2>
+
+    <div class="row g-4 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="glass-card kpi-card">
+          <div class="kpi-label">SCANS TODAY</div>
+          <div class="kpi-value">184</div>
+          <div class="kpi-delta up">▲ 12% vs yesterday</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card kpi-card">
+          <div class="kpi-label">THREATS BLOCKED</div>
+          <div class="kpi-value">37</div>
+          <div class="kpi-delta up">▲ 4% vs yesterday</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card kpi-card">
+          <div class="kpi-label">AVG RISK SCORE</div>
+          <div class="kpi-value">28%</div>
+          <div class="kpi-delta down">▼ 6% vs yesterday</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card kpi-card">
+          <div class="kpi-label">FALSE POSITIVES</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-delta down">▼ 1 vs yesterday</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="glass-card p-4 h-100">
+          <h4 class="mb-3" style="font-size:1rem;">Threats by category (7 days)</h4>
+          <canvas id="trendChart" height="220"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="glass-card p-4 h-100">
+          <h4 class="mb-3" style="font-size:1rem;">Recent scans</h4>
+          <div style="overflow-x:auto;">
+            <table class="table-pg">
+              <thead><tr><th>Subject</th><th>Sender</th><th>Risk</th><th>Verdict</th></tr></thead>
+              <tbody id="recentScansBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FREE ACCESS STRIP ===================== -->
+<section id="pricing" style="padding:60px 0;">
+  <div class="container">
+    <div class="glass-card d-flex flex-wrap align-items-center justify-content-between gap-3" style="padding:32px 40px;">
+      <div>
+        <h2 class="section-title mb-2" style="font-size:1.5rem;">Free to use, no account required</h2>
+        <p class="section-sub mb-0">Every scanning feature on this page — email, URL, domain, attachment and header analysis — is free, with no subscription, sign-up or password.</p>
+      </div>
+      <a href="#scanner" class="btn-accent flex-shrink-0">Start Scanning</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTACT / FOOTER ===================== -->
+<footer id="contact">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-4">
+        <div class="brand mb-3" style="font-size:1.1rem;">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M12 2L3 6V11C3 16.5 6.8 21.2 12 22.5C17.2 21.2 21 16.5 21 11V6L12 2Z" stroke="#00FF88" stroke-width="1.6"/></svg>
+          PhishGuard AI
+        </div>
+        <p>AI-powered phishing detection for people and teams who'd rather stop the click than clean up after it.</p>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="text-white mb-3" style="font-size:0.85rem;">Product</h6>
+        <div class="d-flex flex-column gap-2">
+          <a href="#scanner">Scanner</a>
+          <a href="#dashboard">Dashboard</a>
+          <a href="#pricing">Free access</a>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="text-white mb-3" style="font-size:0.85rem;">Company</h6>
+        <div class="d-flex flex-column gap-2">
+          <a href="#home">About</a>
+          <a href="#gmail">Integrations</a>
+          <a href="#contact">Contact</a>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <h6 class="text-white mb-3" style="font-size:0.85rem;">Get in touch</h6>
+        <form id="contactForm" class="d-flex flex-column gap-2">
+          <input class="pg-input" placeholder="you@example.com" type="email" required>
+          <textarea class="pg-input" rows="3" placeholder="How can we help?"></textarea>
+          <button type="submit" class="btn-accent">Send message</button>
+        </form>
+      </div>
+    </div>
+    <div class="mt-5 pt-4 d-flex flex-wrap justify-content-between" style="border-top:1px solid var(--card-border);">
+      <div>© 2026 PhishGuard AI. Built as a security portfolio project.</div>
+      <div>Demo data only — no live threat feed is connected.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+AOS.init({ duration: 600, once: true });
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-pill').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.scan-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- Dropzone (email) ---------- */
+function wireDropzone(zoneId, inputId, labelId){
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  const label = document.getElementById(labelId);
+  zone.addEventListener('click', ()=> input.click());
+  ['dragover','dragenter'].forEach(evt=>{
+    zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.add('drag-over'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.remove('drag-over'); });
+  });
+  zone.addEventListener('drop', e=>{
+    const f = e.dataTransfer.files[0];
+    if(f && label) label.textContent = f.name;
+  });
+  input.addEventListener('change', ()=>{
+    if(input.files[0] && label) label.textContent = input.files[0].name;
+  });
+}
+wireDropzone('dropzone','fileInput','fileName');
+wireDropzone('dropzoneAttach','fileInputAttach','fileNameAttach');
+
+/* ---------- Simulated analysis engine ---------- */
+const SUSPICIOUS_TERMS = ['verify your account','urgent','password','click here','suspended','wire transfer',
+  'gift card','confirm your identity','limited time','login immediately','bank details','ssn','update payment'];
+
+function currentInputText(){
+  const active = document.querySelector('.tab-pill.active').dataset.tab;
+  const map = { email:'emailText', url:'urlInput', domain:'domainInput', header:'headerText' };
+  const id = map[active];
+  return id ? (document.getElementById(id).value || '') : '';
+}
+
+function scoreFromText(text){
+  const lower = text.toLowerCase();
+  let score = 8 + Math.random()*10;
+  SUSPICIOUS_TERMS.forEach(term=>{ if(lower.includes(term)) score += 9 + Math.random()*6; });
+  if(/https?:\/\/[^\s]*(bit\.ly|tinyurl|-secure-|-verify-|\.ru\b|\.top\b)/.test(lower)) score += 18;
+  if(lower.includes('@') && /\.(xyz|top|click|zip)\b/.test(lower)) score += 12;
+  if(text.trim().length === 0) score = 6 + Math.random()*14;
+  return Math.max(4, Math.min(97, Math.round(score)));
+}
+
+let scoreChartInstance = null;
+function renderScoreRing(score){
+  const ctx = document.getElementById('scoreChart').getContext('2d');
+  let color = 'var(--safe)';
+  let colorHex = '#00FF88';
+  if(score >= 70) colorHex = '#FF4D6D';
+  else if(score >= 35) colorHex = '#FFA83B';
+  document.getElementById('scoreNum').textContent = score + '%';
+  document.getElementById('scoreNum').style.color = colorHex;
+
+  const chip = document.getElementById('verdictChip');
+  let verdict = 'Safe', chipBg = 'rgba(0,255,136,0.12)', chipText='#00FF88';
+  if(score >= 70){ verdict='Malicious'; chipBg='rgba(255,77,109,0.14)'; chipText='#FF4D6D'; }
+  else if(score >= 35){ verdict='Suspicious'; chipBg='rgba(255,168,59,0.14)'; chipText='#FFA83B'; }
+  chip.innerHTML = '<span class="dot" style="background:'+chipText+';box-shadow:0 0 8px '+chipText+';"></span>'+verdict;
+  chip.style.background = chipBg;
+  chip.style.color = chipText;
+
+  if(scoreChartInstance) scoreChartInstance.destroy();
+  scoreChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [score, 100-score],
+        backgroundColor: [colorHex, 'rgba(184,199,217,0.12)'],
+        borderWidth: 0,
+        cutout: '78%'
+      }]
+    },
+    options: {
+      responsive:true,
+      maintainAspectRatio:true,
+      plugins:{ legend:{display:false}, tooltip:{enabled:false} },
+      animation:{ animateRotate:true, duration:900 }
+    }
+  });
+}
+
+function renderChecklist(score){
+  const checks = [
+    ['SPF Validation', score < 60],
+    ['DKIM Check', score < 65],
+    ['Sender Reputation', score < 50],
+    ['URL Safety', score < 55],
+    ['Attachment Inspection', score < 70],
+    ['Header Integrity', score < 60],
+  ];
+  const wrap = document.getElementById('checklist');
+  wrap.innerHTML = '';
+  checks.forEach(([name, pass])=>{
+    const row = document.createElement('div');
+    row.className = 'check-row';
+    const color = pass ? '#00FF88' : '#FF4D6D';
+    const icon = pass
+      ? '<path d="M5 13l4 4L19 7" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+      : '<path d="M6 6l12 12M18 6L6 18" stroke="'+color+'" stroke-width="2" stroke-linecap="round"/>';
+    row.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none">'+icon+'</svg>'+
+      '<span class="name">'+name+'</span>'+
+      '<span class="status" style="color:'+color+'">'+(pass ? 'PASS' : 'FLAGGED')+'</span>';
+    wrap.appendChild(row);
+  });
+}
+
+function renderBreakdown(score){
+  const jitter = ()=> Math.round(Math.max(2, Math.min(98, score + (Math.random()*24-12))));
+  const rows = [
+    ['Phishing Probability', jitter()],
+    ['Spoofing Risk', jitter()],
+    ['Malware Risk', Math.round(Math.max(2, score*0.6 + Math.random()*10))],
+    ['URL Reputation', jitter()],
+    ['Domain Trust Score', Math.round(Math.max(2, 100 - score*0.8 - Math.random()*8))],
+  ];
+  const wrap = document.getElementById('breakdown');
+  wrap.innerHTML = '';
+  rows.forEach(([label, val])=>{
+    val = Math.max(2, Math.min(98, val));
+    let color = '#00FF88';
+    if(val >= 70) color = '#FF4D6D'; else if(val >= 35) color = '#FFA83B';
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = '<div class="breakdown-label"><span>'+label+'</span><span style="color:'+color+'">'+val+'%</span></div>'+
+      '<div class="bd-track"><div class="bd-fill" style="background:'+color+';"></div></div>';
+    wrap.appendChild(row);
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{ row.querySelector('.bd-fill').style.width = val + '%'; }, 60);
+    });
+  });
+}
+
+document.getElementById('scanBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('scanBtn');
+  if(btn.classList.contains('loading')) return;
+  btn.classList.add('loading');
+  const text = currentInputText();
+  setTimeout(()=>{
+    const score = scoreFromText(text);
+    renderScoreRing(score);
+    renderChecklist(score);
+    renderBreakdown(score);
+    btn.classList.remove('loading');
+    document.getElementById('results').classList.add('show');
+    document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 1400);
+});
+
+/* ---------- Dashboard trend chart ---------- */
+new Chart(document.getElementById('trendChart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    datasets: [
+      { label:'Phishing', data:[12,9,14,8,16,6,10], backgroundColor:'#FF4D6D', borderRadius:4, maxBarThickness:14 },
+      { label:'Spoofing', data:[4,5,3,6,4,2,3], backgroundColor:'#FFA83B', borderRadius:4, maxBarThickness:14 },
+      { label:'Malware', data:[2,1,3,2,1,1,2], backgroundColor:'#00FF88', borderRadius:4, maxBarThickness:14 },
+    ]
+  },
+  options: {
+    responsive:true,
+    plugins:{ legend:{ position:'bottom', labels:{ color:'#B8C7D9', boxWidth:10, font:{size:11} } } },
+    scales:{
+      x:{ stacked:true, ticks:{ color:'#B8C7D9' }, grid:{ display:false } },
+      y:{ stacked:true, ticks:{ color:'#B8C7D9' }, grid:{ color:'rgba(184,199,217,0.08)' } }
+    }
+  }
+});
+
+/* ---------- Recent scans table ---------- */
+const recent = [
+  ['Password reset required', 'security@paypa1-support.com', 88, 'Malicious'],
+  ['Your invoice #4471', 'billing@quickbooks.com', 14, 'Safe'],
+  ['Action needed: mailbox full', 'admin@mail-server-update.info', 63, 'Suspicious'],
+  ['Team meeting notes', 'jane.doe@company.com', 6, 'Safe'],
+  ['Confirm your identity now', 'no-reply@secure-bank-verify.top', 91, 'Malicious'],
+];
+const tbody = document.getElementById('recentScansBody');
+recent.forEach(([subject, sender, risk, verdict])=>{
+  let color = '#00FF88', bg='rgba(0,255,136,0.12)';
+  if(verdict==='Malicious'){ color='#FF4D6D'; bg='rgba(255,77,109,0.14)'; }
+  else if(verdict==='Suspicious'){ color='#FFA83B'; bg='rgba(255,168,59,0.14)'; }
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>'+subject+'</td><td style="color:var(--text-2)">'+sender+'</td>'+
+    '<td style="color:'+color+';font-family:var(--font-mono);">'+risk+'%</td>'+
+    '<td><span class="badge-risk" style="background:'+bg+';color:'+color+';">'+verdict+'</span></td>';
+  tbody.appendChild(tr);
+});
+
+/* ---------- Contact form (demo only) ---------- */
+document.getElementById('contactForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const original = btn.textContent;
+  btn.textContent = 'Message sent';
+  setTimeout(()=>{ btn.textContent = original; e.target.reset(); }, 1800);
+});
+</script>
+</body>
+</html>
